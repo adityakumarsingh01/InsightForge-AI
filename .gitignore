@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+backend/storage/datasets/*
+!backend/storage/datasets/.gitkeep
