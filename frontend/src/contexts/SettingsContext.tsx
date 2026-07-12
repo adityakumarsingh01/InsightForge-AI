@@ -26,7 +26,7 @@ const defaultSettings: SettingsState = {
     email: "admin@insightforge.ai",
   },
   appearance: {
-    theme: "system",
+    theme: "dark",
     accentColor: "blue", // "blue", "emerald", "purple", "rose"
   },
   workspace: {
