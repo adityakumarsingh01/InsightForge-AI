@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./frontend/public/logo2.png" alt="InsightForge AI Logo" width="120" />
+  <img src="./frontend/public/logo-light.png" alt="InsightForge AI Logo" width="120" />
 </div>
 
 <h1 align="center">InsightForge AI</h1>
