@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="#">🔗 Live Demo</a>
+  <a href="https://insightforge-ai-sand.vercel.app/">🔗 Live Demo</a>
 </p>
 
 ---
@@ -120,19 +120,23 @@ npm run dev
 ## 🖼 Project Screenshots
 
 ### 🏠 Workspace Dashboard
-*(Add your screenshot here: `![Dashboard](./screenshots/dashboard.png)`)*
+![Dashboard](./screenshots/Dashboard.png)
 
 ### 📊 Exploratory Data Analysis
-*(Add your screenshot here: `![EDA](./screenshots/eda.png)`)*
+![EDA 1](./screenshots/EDA_1.png)
+![EDA 2](./screenshots/EDA_2.png)
+![EDA 3](./screenshots/EDA_3.png)
+![EDA 4](./screenshots/EDA_4.png)
 
 ### 🤖 Machine Learning Studio
-*(Add your screenshot here: `![ML Studio](./screenshots/ml.png)`)*
-
-### 📈 Time-Series Forecasting
-*(Add your screenshot here: `![Forecasting](./screenshots/forecast.png)`)*
+![ML Studio 1](./screenshots/ML%20Studio_1.png)
+![ML Studio 2](./screenshots/ML%20Studio_2.png)
+![ML Studio 3](./screenshots/ML%20Studio_3.png)
+![ML Studio 4](./screenshots/ML%20Studio_4.png)
 
 ### 💬 AI Assistant
-*(Add your screenshot here: `![AI Chat](./screenshots/chat.png)`)*
+![AI Chat 1](./screenshots/AI%20Chat_1.png)
+![AI Chat 2](./screenshots/AI%20Chat_2.png)
 
 ---
 
