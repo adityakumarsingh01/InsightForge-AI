@@ -92,7 +92,7 @@ Results Dashboard & PDF/Notebook Export
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/adityakumarsingh01/InsightForge-AI.git
-cd InsightForgeAI
+cd InsightForge-AI
 ```
 
 ### 2. Backend Setup (FastAPI)
@@ -161,21 +161,10 @@ npm run dev
 
 ---
 
-## 📋 Assignment Requirements Covered
-- [x] Overview
-- [x] Setup & Installation
-- [x] Architecture
-- [x] Design Decisions
-- [x] Trade-offs
-- [x] Future Improvements
-- [x] Public GitHub Repository
-- [x] README Documentation
-
----
-
 ## 👨‍💻 Author
 
 **Aditya Kumar Singh**  
+📧 Email: [adityasingh81201@gmail.com](mailto:adityasingh81201@gmail.com)  
 *B.Tech (Hons.) Computer Science & Engineering (Data Science & Data Engineering)*  
 Lovely Professional University  
 
