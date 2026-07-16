@@ -385,6 +385,7 @@ def get_dataset_ai(dataset_id: str):
 class TrainRequest(BaseModel):
     target: str
     model_type: str
+    exclude_features: list[str] = []
 
 class ForecastRequest(BaseModel):
     date_col: str
@@ -404,6 +405,11 @@ def train_model(dataset_id: str, request: TrainRequest):
         target = request.target
         if target not in df.columns:
             raise HTTPException(status_code=400, detail=f"Target column '{target}' not found")
+            
+        if request.exclude_features:
+            cols_to_drop = [col for col in request.exclude_features if col in df.columns and col != target]
+            if cols_to_drop:
+                df = df.drop(columns=cols_to_drop)
             
         # Drop rows where target is missing
         df = df.dropna(subset=[target])

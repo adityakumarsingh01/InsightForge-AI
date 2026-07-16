@@ -230,9 +230,10 @@ export default function SettingsPage() {
                   <button
                     key={color.id}
                     onClick={() => updateAppearance({ accentColor: color.id })}
-                    className={`h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${color.bgClass} ${
+                    className={`h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${
                       settings.appearance.accentColor === color.id ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#111113] ring-gray-400 dark:ring-white" : ""
                     }`}
+                    style={{ backgroundColor: color.color }}
                     title={color.label}
                   >
                     {settings.appearance.accentColor === color.id && <CheckCircle2 size={18} className="text-white drop-shadow-md" />}

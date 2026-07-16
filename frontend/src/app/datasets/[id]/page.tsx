@@ -7,7 +7,7 @@ import axios from "axios";
 import {
   BarChart3, FileType, Database, Settings, Table, FileText,
   BrainCircuit, Activity, PieChart, ChevronLeft, Loader2, AlertTriangle, Fingerprint,
-  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2
+  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2, CheckCircle2
 } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { useSettings } from "@/contexts/SettingsContext";
@@ -59,6 +59,7 @@ export default function DatasetWorkspacePage() {
   const [modelType, setModelType] = useState("random_forest");
   const [isTraining, setIsTraining] = useState(false);
   const [modelResults, setModelResults] = useState<any>(null);
+  const [excludedFeatures, setExcludedFeatures] = useState<string[]>([]);
 
   // Chat Bot States
   const [chatMessages, setChatMessages] = useState<{role: 'user' | 'ai', content: string}[]>([]);
@@ -140,7 +141,8 @@ export default function DatasetWorkspacePage() {
     try {
       const response = await axios.post(`https://insightforge-ai-7lzg.onrender.com/api/dataset/${datasetId}/train`, {
         target: targetCol,
-        model_type: modelType
+        model_type: modelType,
+        exclude_features: excludedFeatures
       });
       setModelResults(response.data);
       if (settings.notifications.modelTraining) {
@@ -802,6 +804,46 @@ export default function DatasetWorkspacePage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Feature Selection Filter */}
+                {targetCol && (
+                  <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="block text-sm font-medium text-gray-400 mb-3">Feature Selection (Exclude Irrelevant Columns)</label>
+                    <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 max-h-60 overflow-y-auto">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {profiling?.columns_profile
+                          ?.filter((c: any) => c.column !== targetCol)
+                          .map((c: any) => {
+                            const isExcluded = excludedFeatures.includes(c.column);
+                            return (
+                              <button
+                                key={c.column}
+                                onClick={() => {
+                                  if (isExcluded) {
+                                    setExcludedFeatures(excludedFeatures.filter(f => f !== c.column));
+                                  } else {
+                                    setExcludedFeatures([...excludedFeatures, c.column]);
+                                  }
+                                }}
+                                className={`flex items-center gap-2 p-2 rounded-lg text-left transition-colors border text-sm ${
+                                  !isExcluded 
+                                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+                                    : 'bg-[#111113] border-white/5 text-gray-500 hover:border-white/10'
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded flex flex-shrink-0 items-center justify-center border transition-colors ${
+                                  !isExcluded ? 'bg-blue-500 border-blue-500' : 'border-gray-600 bg-[#18181b]'
+                                }`}>
+                                  {!isExcluded && <CheckCircle2 size={12} className="text-[#111113]" />}
+                                </div>
+                                <span className="truncate flex-1" title={c.column}>{c.column}</span>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   onClick={handleTrainModel}
