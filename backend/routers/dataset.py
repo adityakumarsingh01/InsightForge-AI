@@ -35,6 +35,32 @@ def get_dataset_path(dataset_id: str):
 def get_metadata_path(dataset_id: str):
     return STORAGE_DIR / f"{dataset_id}.json"
 
+def load_dataset_df(dataset_id: str, metadata: dict = None) -> pd.DataFrame:
+    dataset_file = get_dataset_path(dataset_id)
+    if not dataset_file: return None
+    ext = dataset_file.suffix.lower()
+    
+    if ext == ".csv":
+        return pd.read_csv(dataset_file)
+    else:
+        if not metadata:
+            meta_path = get_metadata_path(dataset_id)
+            if meta_path.exists():
+                with open(meta_path, "r") as f:
+                    metadata = json.load(f)
+            else:
+                metadata = {}
+        
+        selected_sheets = metadata.get("selected_sheets", [])
+        if not selected_sheets:
+            return pd.read_excel(dataset_file)
+        else:
+            dfs = pd.read_excel(dataset_file, sheet_name=selected_sheets)
+            if isinstance(dfs, dict):
+                # Concatenate all selected sheets, ignoring index to avoid duplicates
+                return pd.concat(dfs.values(), ignore_index=True)
+            return dfs
+
 @router.post("/upload")
 async def upload_dataset(file: UploadFile = File(...)):
     ext = file.filename.split(".")[-1].lower() if file.filename else ""
@@ -53,8 +79,14 @@ async def upload_dataset(file: UploadFile = File(...)):
         
         if ext == "csv":
             df = pd.read_csv(file_path)
+            sheet_names = []
+            selected_sheets = []
         else:
-            df = pd.read_excel(file_path)
+            xl = pd.ExcelFile(file_path)
+            sheet_names = xl.sheet_names
+            selected_sheets = [sheet_names[0]] if sheet_names else []
+            # Only read the first sheet for the initial upload overview
+            df = pd.read_excel(file_path, sheet_name=selected_sheets[0] if selected_sheets else 0)
             
         num_rows = len(df)
         num_cols = len(df.columns)
@@ -66,7 +98,9 @@ async def upload_dataset(file: UploadFile = File(...)):
             "rows": num_rows,
             "columns": num_cols,
             "size_bytes": file_path.stat().st_size,
-            "uploaded_at": datetime.utcnow().isoformat()
+            "uploaded_at": datetime.utcnow().isoformat(),
+            "available_sheets": sheet_names,
+            "selected_sheets": selected_sheets
         }
         
         with open(meta_path, "w") as f:
@@ -78,8 +112,40 @@ async def upload_dataset(file: UploadFile = File(...)):
         if meta_path.exists(): meta_path.unlink()
         raise HTTPException(status_code=500, detail=f"Failed to process: {str(e)}")
 
+class UpdateSheetsRequest(BaseModel):
+    selected_sheets: list[str]
+
+@router.post("/{dataset_id}/update_sheets")
+def update_sheets(dataset_id: str, request: UpdateSheetsRequest):
+    meta_path = get_metadata_path(dataset_id)
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    try:
+        with open(meta_path, "r") as f:
+            metadata = json.load(f)
+            
+        metadata["selected_sheets"] = request.selected_sheets
+        
+        # We also need to update row count since sheets changed
+        df = load_dataset_df(dataset_id, metadata)
+        if df is not None:
+            metadata["rows"] = len(df)
+            
+        with open(meta_path, "w") as f:
+            json.dump(metadata, f)
+            
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class CleanRequest(BaseModel):
+    outlier_multiplier: float = 1.5
+
 @router.post("/{dataset_id}/clean")
-def clean_dataset(dataset_id: str):
+def clean_dataset(dataset_id: str, request: CleanRequest = None):
+    if request is None:
+        request = CleanRequest()
     meta_path = get_metadata_path(dataset_id)
     dataset_file = get_dataset_path(dataset_id)
     
@@ -93,7 +159,7 @@ def clean_dataset(dataset_id: str):
             
         # Load dataset
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         # 1. Clean Column Names
         df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
@@ -108,7 +174,8 @@ def clean_dataset(dataset_id: str):
             Q3 = df[col].quantile(0.75)
             IQR = Q3 - Q1
             # Keep rows where the value is not an outlier
-            df = df[~((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR)))]
+            multiplier = request.outlier_multiplier
+            df = df[~((df[col] < (Q1 - multiplier * IQR)) | (df[col] > (Q3 + multiplier * IQR)))]
             
         # Save cleaned dataset back
         if ext == ".csv":
@@ -156,7 +223,7 @@ def get_dataset_overview(dataset_id: str):
             
         # Add extra overview stats (missing cells, duplicates)
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         metadata["total_missing"] = int(df.isnull().sum().sum())
         metadata["total_duplicates"] = int(df.duplicated().sum())
@@ -175,7 +242,7 @@ def get_dataset_preview(dataset_id: str):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         df = df.replace({np.nan: None}) # handle NaN for JSON serialization
         preview_data = df.to_dict(orient="records")
@@ -191,7 +258,7 @@ def get_dataset_profiling(dataset_id: str):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         profiling_data = []
         for col in df.columns:
@@ -217,7 +284,7 @@ def get_dataset_eda(dataset_id: str):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         eda_response = {"dataset_id": dataset_id}
         
@@ -284,7 +351,7 @@ def get_dataset_ai(dataset_id: str):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         # Simple AI heuristics
         num_rows, num_cols = df.shape
@@ -400,7 +467,7 @@ def train_model(dataset_id: str, request: TrainRequest):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         target = request.target
         if target not in df.columns:
@@ -569,7 +636,7 @@ def forecast_time_series(dataset_id: str, request: ForecastRequest):
         
     try:
         ext = dataset_file.suffix.lower()
-        df = pd.read_csv(dataset_file) if ext == ".csv" else pd.read_excel(dataset_file)
+        df = load_dataset_df(dataset_id, locals().get("metadata", None))
         
         # Verify columns exist
         if request.date_col not in df.columns or request.target_col not in df.columns:

@@ -61,6 +61,7 @@ export default function DatasetWorkspacePage() {
   const [isTraining, setIsTraining] = useState(false);
   const [modelResults, setModelResults] = useState<any>(null);
   const [excludedFeatures, setExcludedFeatures] = useState<string[]>([]);
+  const [outlierMultiplier, setOutlierMultiplier] = useState<number>(1.5);
 
   // Chat Bot States
   const [chatMessages, setChatMessages] = useState<{role: 'user' | 'ai', content: string}[]>([]);
@@ -135,6 +136,27 @@ export default function DatasetWorkspacePage() {
     }
   }, [ai]);
 
+  const handleSheetToggle = async (sheetName: string) => {
+    let newSelected = [...(overview?.selected_sheets || [])];
+    if (newSelected.includes(sheetName)) {
+      newSelected = newSelected.filter(s => s !== sheetName);
+    } else {
+      newSelected.push(sheetName);
+    }
+    // ensure at least one sheet is selected
+    if (newSelected.length === 0) return;
+
+    try {
+      await axios.post(`https://insightforge-ai-7lzg.onrender.com/api/dataset/${datasetId}/update_sheets`, {
+        selected_sheets: newSelected
+      });
+      // immediately re-fetch dataset data
+      await fetchDatasetData();
+    } catch (err: any) {
+      toast.error("Failed to update sheets.");
+    }
+  };
+
   const handleTrainModel = async () => {
     if (!targetCol) return;
     
@@ -163,7 +185,9 @@ export default function DatasetWorkspacePage() {
     setIsCleaning(true);
     const cleaningToast = toast.loading("Cleaning Data: Standardizing columns, dropping NAs, handling outliers...", { icon: '🧹' });
     try {
-      await axios.post(`https://insightforge-ai-7lzg.onrender.com/api/dataset/${datasetId}/clean`);
+      await axios.post(`https://insightforge-ai-7lzg.onrender.com/api/dataset/${datasetId}/clean`, {
+        outlier_multiplier: outlierMultiplier
+      });
       toast.success("Data successfully cleaned! Reloading charts...", { id: cleaningToast });
       await fetchDatasetData();
     } catch (err: any) {
@@ -339,6 +363,37 @@ export default function DatasetWorkspacePage() {
         {activeTab === "Overview" && (
           <div className="p-6 space-y-6 overflow-y-auto animate-in fade-in h-full">
             <h3 className="text-lg font-semibold text-white">Dataset Overview</h3>
+            
+            {/* Excel Sheet Selector */}
+            {overview.available_sheets && overview.available_sheets.length > 1 && (
+              <div className="bg-[#09090b] p-5 rounded-xl border border-white/5 mt-4 mb-6">
+                <h4 className="text-sm font-semibold text-white mb-3">Excel Sheets Included</h4>
+                <div className="flex flex-wrap gap-3">
+                  {overview.available_sheets.map((sheet: string) => {
+                    const isSelected = overview.selected_sheets?.includes(sheet);
+                    return (
+                      <button
+                        key={sheet}
+                        onClick={() => handleSheetToggle(sheet)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                          isSelected 
+                            ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
+                            : 'bg-[#18181b] border-white/10 text-gray-400 hover:text-gray-300'
+                        }`}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors ${
+                          isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-500'
+                        }`}>
+                          {isSelected && <CheckCircle2 size={10} className="text-[#09090b]" />}
+                        </div>
+                        {sheet}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-[#09090b] p-5 rounded-xl border border-white/5">
                 <p className="text-gray-400 text-sm mb-1">Total Rows</p>
@@ -507,6 +562,29 @@ export default function DatasetWorkspacePage() {
                   <p className="text-gray-400 text-sm max-w-xl">
                     Standardizes column names (lowercase, underscores), drops missing values, and removes extreme outliers from numeric columns using the Interquartile Range (IQR) method.
                   </p>
+                  
+                  {/* Advanced Outlier Filter */}
+                  <div className="mt-4 bg-[#18181b] rounded-xl p-4 border border-white/5 max-w-sm">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-medium text-gray-300">Outlier Filter Aggressiveness</label>
+                      <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">
+                        {outlierMultiplier.toFixed(1)}x IQR
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="3.0"
+                      step="0.1"
+                      value={outlierMultiplier}
+                      onChange={(e) => setOutlierMultiplier(parseFloat(e.target.value))}
+                      className="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                      <span>Aggressive (Drops more)</span>
+                      <span>Lenient (Keeps more)</span>
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={handleCleanData}
