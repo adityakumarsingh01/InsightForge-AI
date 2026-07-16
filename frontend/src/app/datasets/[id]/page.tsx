@@ -157,6 +157,22 @@ export default function DatasetWorkspacePage() {
     }
   };
 
+  const handleSelectAllSheets = async () => {
+    if (!overview?.available_sheets) return;
+    const isAllSelected = overview.selected_sheets?.length === overview.available_sheets.length;
+    // If all selected, revert to just the first sheet. Otherwise select all.
+    const newSelected = isAllSelected ? [overview.available_sheets[0]] : [...overview.available_sheets];
+    
+    try {
+      await axios.post(`https://insightforge-ai-7lzg.onrender.com/api/dataset/${datasetId}/update_sheets`, {
+        selected_sheets: newSelected
+      });
+      await fetchDatasetData();
+    } catch (err: any) {
+      toast.error("Failed to update sheets.");
+    }
+  };
+
   const handleTrainModel = async () => {
     if (!targetCol) return;
     
@@ -367,7 +383,15 @@ export default function DatasetWorkspacePage() {
             {/* Excel Sheet Selector */}
             {overview.available_sheets && overview.available_sheets.length > 1 && (
               <div className="bg-[#09090b] p-5 rounded-xl border border-white/5 mt-4 mb-6">
-                <h4 className="text-sm font-semibold text-white mb-3">Excel Sheets Included</h4>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm font-semibold text-white">Excel Sheets Included</h4>
+                  <button 
+                    onClick={handleSelectAllSheets}
+                    className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-2 py-1 rounded"
+                  >
+                    {overview.selected_sheets?.length === overview.available_sheets.length ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-3">
                   {overview.available_sheets.map((sheet: string) => {
                     const isSelected = overview.selected_sheets?.includes(sheet);
