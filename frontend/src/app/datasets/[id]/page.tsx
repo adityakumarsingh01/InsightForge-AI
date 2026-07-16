@@ -7,7 +7,7 @@ import axios from "axios";
 import {
   BarChart3, FileType, Database, Settings, Table, FileText,
   BrainCircuit, Activity, PieChart, ChevronLeft, Loader2, AlertTriangle, Fingerprint,
-  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2, CheckCircle2
+  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2, CheckCircle2, Search
 } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { useSettings } from "@/contexts/SettingsContext";
@@ -53,6 +53,7 @@ export default function DatasetWorkspacePage() {
   const [profiling, setProfiling] = useState<any>(null);
   const [eda, setEda] = useState<any>(null);
   const [ai, setAi] = useState<any>(null);
+  const [tableFilter, setTableFilter] = useState("");
 
   // Model Training States
   const [targetCol, setTargetCol] = useState("");
@@ -380,9 +381,27 @@ export default function DatasetWorkspacePage() {
         {/* PREVIEW TAB */}
         {activeTab === "Preview" && preview && (
           <div className="flex flex-col h-full animate-in fade-in">
-            <div className="p-4 border-b border-white/5 shrink-0 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white">Full Data Preview</h3>
-              <p className="text-xs text-gray-500">Showing all {preview.data.length} rows</p>
+            <div className="p-4 border-b border-white/5 shrink-0 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Full Data Preview</h3>
+                <p className="text-xs text-gray-500">
+                  {tableFilter 
+                    ? `Showing ${preview.data.filter((row: any) => Object.values(row).some((val: any) => String(val).toLowerCase().includes(tableFilter.toLowerCase()))).length} of ${preview.data.length} rows` 
+                    : `Showing all ${preview.data.length} rows`}
+                </p>
+              </div>
+              
+              {/* Search Filter */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search in all columns..."
+                  value={tableFilter}
+                  onChange={(e) => setTableFilter(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-[#18181b] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition-colors w-full sm:w-64"
+                />
+              </div>
             </div>
             <div className="overflow-auto bg-[#09090b] custom-scrollbar max-h-[600px]">
               <table className="w-full text-left text-sm text-gray-300 whitespace-nowrap min-w-max">
@@ -394,13 +413,32 @@ export default function DatasetWorkspacePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {preview.data.map((row: any, i: number) => (
+                  {preview.data
+                    .filter((row: any) => {
+                      if (!tableFilter) return true;
+                      return Object.values(row).some((val: any) => 
+                        String(val).toLowerCase().includes(tableFilter.toLowerCase())
+                      );
+                    })
+                    .map((row: any, i: number) => (
                     <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                       {preview.columns.map((col: string, j: number) => (
                         <td key={j} className="px-6 py-3">{row[col] !== null ? String(row[col]) : <span className="text-red-500/50 italic">null</span>}</td>
                       ))}
                     </tr>
                   ))}
+                  {preview.data.filter((row: any) => {
+                      if (!tableFilter) return true;
+                      return Object.values(row).some((val: any) => 
+                        String(val).toLowerCase().includes(tableFilter.toLowerCase())
+                      );
+                    }).length === 0 && (
+                      <tr>
+                        <td colSpan={preview.columns.length} className="px-6 py-8 text-center text-gray-500">
+                          No rows match your search "{tableFilter}"
+                        </td>
+                      </tr>
+                  )}
                 </tbody>
               </table>
             </div>
