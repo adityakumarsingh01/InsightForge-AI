@@ -61,6 +61,16 @@ export default function UploadDatasetPage() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && file && !isUploading) {
+        handleUpload();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [file, isUploading]);
+
   const handleUpload = async () => {
     if (!file) return;
     
