@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from pathlib import Path
 import json
+import os
+import logging
 from routers.rest import router as rest_router
 from routers.dataset import router as dataset_router
 
@@ -12,16 +14,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Configure CORS for Next.js frontend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[frontend_url, "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-STORAGE_DIR = Path("storage/datasets")
+STORAGE_DIR = Path(os.getenv("STORAGE_DIR", "storage/datasets"))
 EXPERIMENTS_FILE = STORAGE_DIR / "experiments.json"
 
 @app.get("/api/health")
@@ -50,8 +57,8 @@ def get_dashboard_stats():
                             file_types["Excel"] = file_types.get("Excel", 0) + 1
                         elif (STORAGE_DIR / f"{dataset_id}.xls").exists():
                             file_types["Excel"] = file_types.get("Excel", 0) + 1
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error reading metadata for {f.name}: {e}")
             
     # Count experiments and models
     model_counts = {}
@@ -70,12 +77,17 @@ def get_dashboard_stats():
                 try:
                     acc_val = float(acc) / 100
                     if acc_val > best_score: best_score = acc_val
-                except: pass
+                except (ValueError, TypeError): 
+                    pass
                 try:
                     r2_val = float(r2)
                     if r2_val > best_score: best_score = r2_val
-                except: pass
-    except:
+                except (ValueError, TypeError): 
+                    pass
+    except FileNotFoundError:
+        experiments = []
+    except Exception as e:
+        logger.warning(f"Error reading experiments file: {e}")
         experiments = []
         
     return {
@@ -90,4 +102,5 @@ app.include_router(rest_router)
 app.include_router(dataset_router)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

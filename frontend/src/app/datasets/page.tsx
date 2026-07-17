@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Database, FileText, ChevronRight, Upload, Search } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import axios from "axios";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -73,8 +74,14 @@ export default function DatasetsPage() {
         {/* List */}
         <div className="flex-1 overflow-auto custom-scrollbar p-2">
           {loading ? (
-            <div className="flex justify-center items-center h-48">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+            <div className="flex flex-col items-center justify-center h-48 gap-4 animate-in fade-in duration-700">
+              <div className="relative flex items-center justify-center h-24 w-24">
+                <div className="absolute w-20 h-20 bg-blue-500/20 rounded-full animate-ping"></div>
+                <div className="absolute w-12 h-12 bg-blue-500/40 rounded-full animate-pulse"></div>
+                <Image src="/logo2.png" alt="Logo" width={35} height={35} className="relative z-10 hidden dark:block animate-bounce" />
+                <Image src="/logo-light.png" alt="Logo" width={35} height={35} className="relative z-10 block dark:hidden animate-bounce" />
+              </div>
+              <p className="text-gray-500 text-sm font-medium">Loading datasets...</p>
             </div>
           ) : filteredDatasets.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">

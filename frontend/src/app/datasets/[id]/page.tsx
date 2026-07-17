@@ -295,9 +295,20 @@ export default function DatasetWorkspacePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-        <p className="text-gray-400">Loading workspace...</p>
+      <div className="flex flex-col items-center justify-center h-[70vh] gap-6 animate-in fade-in duration-700">
+        <div className="relative flex items-center justify-center h-32 w-32">
+          <div className="absolute w-24 h-24 bg-blue-500/20 rounded-full animate-ping"></div>
+          <div className="absolute w-16 h-16 bg-blue-500/40 rounded-full animate-pulse"></div>
+          <Image src="/logo2.png" alt="Logo" width={45} height={45} className="relative z-10 hidden dark:block animate-bounce" />
+          <Image src="/logo-light.png" alt="Logo" width={45} height={45} className="relative z-10 block dark:hidden animate-bounce" />
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">InsightForge AI</h2>
+          <p className="text-gray-500 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+            Loading workspace...
+          </p>
+        </div>
       </div>
     );
   }
