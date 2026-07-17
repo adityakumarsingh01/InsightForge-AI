@@ -53,9 +53,9 @@ def load_dataset_df(dataset_id: str, metadata: dict = None) -> pd.DataFrame:
         
         selected_sheets = metadata.get("selected_sheets", [])
         if not selected_sheets:
-            return pd.read_excel(dataset_file)
+            return pd.read_excel(dataset_file, engine="calamine")
         else:
-            dfs = pd.read_excel(dataset_file, sheet_name=selected_sheets)
+            dfs = pd.read_excel(dataset_file, sheet_name=selected_sheets, engine="calamine")
             if isinstance(dfs, dict):
                 # Concatenate all selected sheets, ignoring index to avoid duplicates
                 return pd.concat(dfs.values(), ignore_index=True)
@@ -82,11 +82,11 @@ async def upload_dataset(file: UploadFile = File(...)):
             sheet_names = []
             selected_sheets = []
         else:
-            xl = pd.ExcelFile(file_path)
+            xl = pd.ExcelFile(file_path, engine="calamine")
             sheet_names = xl.sheet_names
             selected_sheets = [sheet_names[0]] if sheet_names else []
             # Only read the first sheet for the initial upload overview
-            df = pd.read_excel(file_path, sheet_name=selected_sheets[0] if selected_sheets else 0)
+            df = pd.read_excel(file_path, sheet_name=selected_sheets[0] if selected_sheets else 0, engine="calamine")
             
         num_rows = len(df)
         num_cols = len(df.columns)

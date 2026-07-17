@@ -84,7 +84,7 @@ export default function UploadDatasetPage() {
       }, 1500);
       
     } catch (err: any) {
-      setError(err.response?.data?.detail || "An error occurred during upload.");
+      setError(err.response?.data?.detail || err.message || "An error occurred during upload.");
       setSuccess(false);
     } finally {
       setIsUploading(false);

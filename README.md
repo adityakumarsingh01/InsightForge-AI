@@ -119,6 +119,9 @@ npm run dev
 
 ## 🖼 Project Screenshots
 
+### 🏠 Home Page
+![Home Page](./screenshots/Home.png)
+
 ### 🏠 Workspace Dashboard
 ![Dashboard](./screenshots/Dashboard.png)
 
