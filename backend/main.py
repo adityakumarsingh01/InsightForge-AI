@@ -64,6 +64,7 @@ def get_dashboard_stats():
             
     # Count experiments and models
     model_counts = {}
+    best_scores_per_model = {}
     best_score = 0
     try:
         with open(EXPERIMENTS_FILE, "r") as f:
@@ -76,16 +77,25 @@ def get_dashboard_stats():
                 metrics = exp.get("metrics", {})
                 acc = str(metrics.get("Testing Accuracy", "0%")).replace("%", "")
                 r2 = metrics.get("Testing R-Squared", 0)
+                
+                exp_score = 0
                 try:
                     acc_val = float(acc) / 100
-                    if acc_val > best_score: best_score = acc_val
+                    if acc_val > exp_score: exp_score = acc_val
                 except (ValueError, TypeError): 
                     pass
                 try:
                     r2_val = float(r2)
-                    if r2_val > best_score: best_score = r2_val
+                    if r2_val > exp_score: exp_score = r2_val
                 except (ValueError, TypeError): 
                     pass
+                
+                if exp_score > best_score: 
+                    best_score = exp_score
+                
+                if exp_score > best_scores_per_model.get(model_name, 0):
+                    best_scores_per_model[model_name] = exp_score
+                    
     except FileNotFoundError:
         experiments = []
     except Exception as e:
@@ -97,6 +107,7 @@ def get_dashboard_stats():
         "experiments_count": len(experiments),
         "file_types": file_types,
         "model_counts": model_counts,
+        "best_scores_per_model": best_scores_per_model,
         "best_score": round(best_score * 100, 2)
     }
 

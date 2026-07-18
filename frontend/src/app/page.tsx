@@ -15,7 +15,14 @@ const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 export default function Dashboard() {
   const [datasets, setDatasets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any>({ datasets_count: 0, experiments_count: 0, file_types: {}, model_counts: {}, best_score: 0 });
+  const [stats, setStats] = useState<any>({ 
+    datasets_count: 0, 
+    experiments_count: 0, 
+    file_types: {}, 
+    model_counts: {}, 
+    best_scores_per_model: {},
+    best_score: 0 
+  });
   const { settings } = useSettings();
   const [isDark, setIsDark] = useState(true);
 
@@ -55,6 +62,44 @@ export default function Dashboard() {
 
   const hasData = datasets.length > 0;
 
+  // Process data for Daily Uploads line chart
+  const getDailyUploadData = () => {
+    const dailyCounts: { [date: string]: number } = {};
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      dailyCounts[dateStr] = 0;
+    }
+
+    datasets.forEach(ds => {
+      if (ds.uploaded_at) {
+        const dateStr = ds.uploaded_at.split('T')[0];
+        // Count number of datasets uploaded
+        if (dailyCounts[dateStr] !== undefined) {
+          dailyCounts[dateStr] += 1; 
+        }
+      }
+    });
+
+    const sortedDates = Object.keys(dailyCounts).sort();
+    const values = sortedDates.map(date => dailyCounts[date]);
+    const formattedDates = sortedDates.map(dateStr => {
+      if (dateStr === todayStr) {
+        return "Today";
+      }
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    return { x: formattedDates, y: values };
+  };
+
+  const dailyData = getDailyUploadData();
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       
@@ -92,6 +137,41 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{stat.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Daily Data Uploaded Line Chart (Full Width) */}
+      <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden flex flex-col p-6 shadow-sm dark:shadow-none w-full">
+        <h2 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 self-start flex items-center gap-2">
+          <Activity size={18} className="text-rose-500" />
+          Daily Datasets Uploaded
+        </h2>
+        <div className="w-full flex justify-center">
+          <Plot
+            data={[{
+              x: dailyData.x,
+              y: dailyData.y,
+              type: 'scatter',
+              mode: 'lines+markers',
+              fill: 'tozeroy',
+              line: { color: '#f43f5e', width: 3, shape: 'spline' },
+              marker: { color: '#f43f5e', size: 8 },
+              fillcolor: isDark ? 'rgba(244, 63, 94, 0.1)' : 'rgba(244, 63, 94, 0.05)'
+            }]}
+            layout={{
+              autosize: true,
+              height: 300,
+              paper_bgcolor: 'rgba(0,0,0,0)',
+              plot_bgcolor: 'rgba(0,0,0,0)',
+              font: { color: isDark ? '#a1a1aa' : '#52525b' },
+              margin: { t: 10, l: 40, r: 20, b: 30 },
+              xaxis: { showgrid: false, zeroline: false },
+              yaxis: { showgrid: true, gridcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', zeroline: false }
+            }}
+            useResizeHandler={true}
+            style={{ width: '100%', height: '100%' }}
+            config={{ displayModeBar: false, responsive: true }}
+          />
+        </div>
       </div>
 
       {/* Main Grid */}
@@ -154,6 +234,50 @@ export default function Dashboard() {
               />
             ) : (
               <p className="text-gray-500 text-sm mt-10">No models trained yet.</p>
+            )}
+          </div>
+          
+          {/* Best Model Scores Bar Chart */}
+          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden flex flex-col p-5 items-center shadow-sm dark:shadow-none lg:col-span-2">
+            <h2 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 self-start flex items-center gap-2">
+              <TrendingUp size={18} className="text-orange-500" />
+              Best Scores per Model
+            </h2>
+            {Object.keys(stats.best_scores_per_model || {}).length > 0 ? (
+              <div className="w-full flex justify-center">
+                <Plot
+                  data={[{
+                    x: Object.keys(stats.best_scores_per_model).map(k => k.replace(/_/g, ' ')),
+                    y: Object.values(stats.best_scores_per_model).map(v => (v as number) * 100),
+                    type: 'bar',
+                    marker: { 
+                      color: Object.values(stats.best_scores_per_model).map(v => 
+                        (v as number) * 100 === stats.best_score ? '#f97316' : (isDark ? '#3f3f46' : '#e4e4e7')
+                      )
+                    }
+                  }]}
+                  layout={{
+                    autosize: true,
+                    height: 300,
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: isDark ? '#a1a1aa' : '#52525b' },
+                    margin: { t: 10, l: 40, r: 10, b: 80 },
+                    xaxis: { showgrid: false, zeroline: false },
+                    yaxis: { 
+                      showgrid: true, 
+                      gridcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', 
+                      zeroline: false,
+                      ticksuffix: '%'
+                    }
+                  }}
+                  useResizeHandler={true}
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false, responsive: true }}
+                />
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm mt-10">No scores available yet.</p>
             )}
           </div>
           
