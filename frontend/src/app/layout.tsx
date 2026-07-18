@@ -53,6 +53,21 @@ export default function RootLayout({
               {children}
             </div>
           </main>
+
+          {/* Professional Watermark */}
+          <a 
+            href="https://adityasingh81201.wixsite.com/professional-portfol" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-50 pointer-events-none print:hidden"
+          >
+            <div className="backdrop-blur-md bg-white/40 dark:bg-[#111113]/60 border border-gray-200 dark:border-white/10 px-5 py-2.5 rounded-full shadow-xl shadow-black/5 flex items-center gap-2 transition-all duration-500 hover:bg-white/80 dark:hover:bg-[#111113]/90 hover:scale-105 hover:shadow-2xl hover:shadow-rose-500/10 cursor-pointer pointer-events-auto group">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Built by</span>
+              <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-indigo-500 group-hover:from-rose-400 group-hover:to-indigo-400 transition-all duration-300">
+                Aditya Kumar Singh
+              </span>
+            </div>
+          </a>
         </SettingsProvider>
       </body>
     </html>
