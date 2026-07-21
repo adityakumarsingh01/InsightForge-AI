@@ -7,7 +7,7 @@ import axios from "axios";
 import {
   BarChart3, FileType, Database, Settings, Table, FileText,
   BrainCircuit, Activity, PieChart, ChevronLeft, Loader2, AlertTriangle, Fingerprint,
-  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2, CheckCircle2, Search
+  DownloadCloud, Send, User, MessageSquare, TrendingUp, Wand2, CheckCircle2, Search, Bot
 } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { useSettings } from "@/contexts/SettingsContext";
@@ -1670,6 +1670,16 @@ export default function DatasetWorkspacePage() {
         )}
       </div>
 
+      {/* Floating AI Assistant Button */}
+      {activeTab !== "AI Assistant" && (
+        <button
+          onClick={() => setActiveTab("AI Assistant")}
+          className="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white p-4 rounded-full shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:-translate-y-1 transition-all duration-300 group print:hidden flex items-center justify-center"
+          title="Ask AI Assistant"
+        >
+          <Bot size={24} className="group-hover:animate-pulse" />
+        </button>
+      )}
     </div>
   );
 }
