@@ -258,6 +258,20 @@ export default function DatasetWorkspacePage() {
       const lowerText = text.toLowerCase();
       if (lowerText.includes("explain")) {
         aiResponse = ai?.summary || "This dataset contains various features that can be used for predictive modeling. I can help you uncover patterns, identify correlations, and build highly accurate machine learning models.";
+      } else if (lowerText.includes("missing")) {
+        const missingCount = overview?.total_missing || 0;
+        if (missingCount > 0) {
+            aiResponse = `I found exactly ${missingCount.toLocaleString()} missing cells in this dataset. You can easily clean them by clicking the 'Clean Data' button, which will automatically handle them.`;
+        } else {
+            aiResponse = "Great news! I scanned the entire dataset and found exactly 0 missing values. Your data is completely intact.";
+        }
+      } else if (lowerText.includes("row") || lowerText.includes("record") || lowerText.includes("size")) {
+        aiResponse = `This dataset contains ${overview?.rows?.toLocaleString() || 0} rows and ${overview?.columns?.toLocaleString() || 0} columns. The total file size is ${formatBytes(overview?.size_bytes || 0)}.`;
+      } else if (lowerText.includes("duplicate")) {
+        const duplicates = overview?.total_duplicates || 0;
+        aiResponse = duplicates > 0 
+            ? `I detected ${duplicates.toLocaleString()} duplicate rows in this dataset.`
+            : `I checked the dataset and found 0 duplicate rows!`;
       } else if (lowerText.includes("important") || lowerText.includes("column")) {
         aiResponse = `Based on the automated profiling, the most important columns typically have high variance and strong correlations with your target variable. For example, ${ai?.model_suggestions?.[0]?.target ? 'we identified "' + ai.model_suggestions[0].target + '" as a strong target candidate.' : 'you can check the correlation heatmap in the Analytics tab.'}`;
       } else if (lowerText.includes("business")) {
@@ -266,8 +280,8 @@ export default function DatasetWorkspacePage() {
         aiResponse = "Random Forest usually performs well because it's an ensemble learning method. It builds multiple decision trees and merges them together to get a more accurate and stable prediction. It handles non-linear relationships very effectively and is highly resistant to overfitting compared to a single decision tree.";
       } else if (lowerText.includes("accuracy") || lowerText.includes("f1")) {
         aiResponse = "Accuracy is the straightforward percentage of correct predictions out of all predictions. However, the F1-Score is the harmonic mean of Precision and Recall. F1-Score is much more useful than Accuracy when you are dealing with imbalanced datasets (e.g., detecting fraud where 99% of transactions are normal).";
-      } else if (lowerText.includes("leakage") || lowerText.includes("imbalance") || lowerText.includes("outliers") || lowerText.includes("missing")) {
-        aiResponse = "During my automated scan of this dataset, I check for missing values, high correlation (which can indicate data leakage), class imbalance in categorical targets, and statistical outliers in numerical distributions. If any severe issues are found, they will be flagged in the Data Profiling tab.";
+      } else if (lowerText.includes("leakage") || lowerText.includes("imbalance") || lowerText.includes("outliers")) {
+        aiResponse = "During my automated scan of this dataset, I check for high correlation (which can indicate data leakage), class imbalance in categorical targets, and statistical outliers in numerical distributions. If any severe issues are found, they will be flagged in the Data Profiling tab.";
       }
       
       setChatMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
