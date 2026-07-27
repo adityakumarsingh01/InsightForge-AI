@@ -34,6 +34,7 @@ Instead of writing hundreds of lines of Python code for data preprocessing, visu
 - **Multiple Algorithms**: Train using Random Forest, Logistic/Linear Regression, Decision Trees, Gradient Boosting, or Support Vector Machines (SVM).
 - **Instant Metrics**: View R-Squared, MSE, MAE, Accuracy, Precision, Recall, and F1-Score instantly.
 - **Advanced Visualizations**: Interactive Confusion Matrices and ROC Curves.
+- **Best Model Leaderboard**: Visually highlights the highest-scoring algorithm across all historical experiments in a dynamic dashboard chart.
 
 ### 📈 Time-Series Forecasting
 - **Time Feature Engineering**: Automatically extracts Year, Month, Day, Day-of-week, and Trend features from your datetime columns.
@@ -41,7 +42,8 @@ Instead of writing hundreds of lines of Python code for data preprocessing, visu
 - **Interactive Projections**: Beautifully visualizes historical data alongside future projections.
 
 ### 💬 AI Data Scientist Assistant
-- **Interactive Chat**: Ask questions about your dataset.
+- **Floating Chatbot UI**: Instant access to the AI assistant from any tab (Overview, Profiling, Analytics) via a globally floating UI button.
+- **Context-Aware Responses**: Dynamically injects live metadata (exact missing values, row counts, memory limits) into chat responses without needing a paid API.
 - **Automated Insights**: Identifies dataset shape, feature importance, and best modeling strategies automatically.
 
 ### 📄 Report Generation & Export
