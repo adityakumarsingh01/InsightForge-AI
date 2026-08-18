@@ -54,7 +54,7 @@ export default function RootLayout({
             </div>
           </main>
 
-          {/* Professional Watermark (Commented out for now) */}
+          {/* Professional Watermark */}
           <a
             href="https://portfolio-ecru-one-nzr8n36bhi.vercel.app/"
             target="_blank"
