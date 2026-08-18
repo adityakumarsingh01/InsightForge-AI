@@ -55,8 +55,8 @@ export default function RootLayout({
           </main>
 
           {/* Professional Watermark (Commented out for now) */}
-          {/* <a
-            href="https://adityasingh81201.wixsite.com/professional-portfol"
+          <a
+            href="https://portfolio-ecru-one-nzr8n36bhi.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-6 right-6 z-50 pointer-events-none print:hidden"
@@ -67,7 +67,7 @@ export default function RootLayout({
                 Aditya Kumar Singh
               </span>
             </div>
-          </a> */}
+          </a>
         </SettingsProvider>
       </body>
     </html>
